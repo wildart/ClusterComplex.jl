@@ -1,4 +1,4 @@
-using ClusterComplex, Test
+using ClusterComplex, Clustering, Test
 import Random
 
 @testset "Complex" begin

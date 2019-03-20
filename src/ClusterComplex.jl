@@ -113,8 +113,8 @@ function mahalonobis!(D::AbstractMatrix{T},
     for i in 1:K
         pdataidxs = assign .== i
         pdata = view(data, :, pdataidxs)
-        dist = Distances.Mahalanobis(invcov(pdata))
         μ = vec(mean(pdata, dims=2))
+        dist = Distances.Mahalanobis(invcov(pdata))
         D[:, i] .= Distances.colwise(dist, data, μ)
     end
 end
@@ -165,14 +165,14 @@ Returns a simplicial complex with weights evaluated from distances.
 - `method::Symbol = :mahalonobis`: the default construction method
 - `maxoutdim::Integer = 1`: the maximal dimension of the simplicial complex
 - `expansion::Symbol = :incremental`: the default simplicial complex construction method
-- `ν::Integer=2`: the witness comples construction mode (see `witness`)
+- `ν::Integer=0`: the witness comples construction mode (see `witness`)
 - `subspacemaxdim::Integer = size(data,1)-1`: the maximal dimension of the partition subspace
 """
 function clustercomplex(data::AbstractMatrix{T}, partition::P, χ::T;
                         method=:mahalonobis,
                         maxoutdim::Integer = 1,
                         expansion = :incremental,
-                        ν::Integer=2,
+                        ν::Integer=0,
                         kwargs...) where {T <: Real, P <: ClusteringResult}
 
     N = size(data,2)          # number of points
@@ -181,7 +181,7 @@ function clustercomplex(data::AbstractMatrix{T}, partition::P, χ::T;
 
     # calculate distance matrix with appropriate method
     if method == :mahalonobis
-        mahalonobis!(D, data, partition, kwargs...)
+        mahalonobis!(D, data, partition)
     elseif method == :subspacemahalonobis
         params = filter(p->first(p) == :subspacemaxdim, kwargs)
         ssmaxdim = get(params, :subspacemaxdim, size(data,1)-1)

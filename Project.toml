@@ -1,6 +1,6 @@
 name = "ClusterComplex"
 uuid = "a4b5195f-7e50-4300-9f38-3baf1bf3ac9e"
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"

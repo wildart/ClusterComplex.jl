@@ -7,7 +7,7 @@ import MultivariateStats: fit, PCA, mean, projection
 import Statistics: mean, covm
 import LinearAlgebra: inv, pinv, norm, eigen, isposdef, diagm, diag
 
-export clustercomplex
+export clustercomplex, MahalonobisCluster
 
 include("types.jl")
 include("datasets.jl")

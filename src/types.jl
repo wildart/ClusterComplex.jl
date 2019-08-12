@@ -13,6 +13,8 @@ end
 Base.show(io::IO, result::MahalonobisClusteringResult) =
     print(io, "MahalonobisClustering: $(length(result.clusters)) clusters")
 
+clusters(mcr::MahalonobisClusteringResult) = mcr.clusters
+
 nclusters(mcr::MahalonobisClusteringResult) = length(mcr.clusters)
 counts(mcr::MahalonobisClusteringResult) = map(c->length(c.idx), mcr.clusters)
 assignments(mcr::MahalonobisClusteringResult) =

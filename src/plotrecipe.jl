@@ -14,7 +14,7 @@ function elliptical_bound(S::AbstractMatrix{<:Real}, χ::Real)
         ϕ += 2π
     end
 
-    θ = range(0.0, 2π, step=0.1)
+    θ = range(0.0, 2π+0.01, step=0.1)
     a, b = χ*sqrt(λ[FI[1]]), χ*sqrt(λ[FI[2]])
     x, y  = a.*cos.(θ), b.*sin.(θ)
     ellipse = rotationmat(ϕ) * hcat(x, y)'

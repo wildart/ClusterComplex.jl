@@ -8,12 +8,15 @@ import Random
     K = 10
     d = 15.0
 
-    X, β_prof = ClusterComplex.dataset("TwoMoons")
+    X, β_prof, L = ClusterComplex.dataset("TwoMoons")
     cls = kmeans(X, K)
-    cplx, w = clustercomplex(X, cls, d, maxoutdim=K)
+    cplx, w, mcr = clustercomplex(X, cls, d, maxoutdim=2)
 
-    @test length(size(cplx)) == K
+    @test length(size(cplx)) == 3
     @test maximum(map(maximum, values(w))) < d
+
+    @test nclusters(mcr) == K
+    @test assignments(mcr) == assignments(cls)
 
 end
 

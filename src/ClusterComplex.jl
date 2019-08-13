@@ -1,13 +1,16 @@
 module ClusterComplex
 
 import ComputationalHomology: complex, group, simplices, persistenthomology, dim, witness, StandardReduction
-import Clustering: ClusteringResult, nclusters, assignments
+import Clustering: ClusteringResult, nclusters, assignments, counts
 import Distances
 import MultivariateStats: fit, PCA, mean, projection
 import Statistics: mean, covm
 import LinearAlgebra: inv, pinv, norm, eigen, isposdef, diagm, diag
 
-export clustercomplex, MahalonobisCluster
+export clustercomplex,
+       MahalonobisCluster, MahalonobisClusteringResult,
+       nclusters, assignments, counts,
+       clusters
 
 include("types.jl")
 include("datasets.jl")

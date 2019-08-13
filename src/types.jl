@@ -1,8 +1,8 @@
 import Clustering: ClusteringResult, nclusters, assignments, counts
 
 struct MahalonobisCluster{T<:Real}
-    mu::Vector{T}
-    sigma::Matrix{T}
+    mu::AbstractVector{T}
+    sigma::AbstractMatrix{T}
     idx::Vector{Int}
 end
 

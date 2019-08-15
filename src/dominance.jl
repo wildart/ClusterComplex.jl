@@ -42,7 +42,7 @@ function findprofile(flt, profile, ϵ = 0.0001; minval = 0.0, debug = false)
             continue
         end
         debug && print("$cpl: ")
-        bn = ComputationalHomology.betti(homology(cpl))
+        bn = betti(homology(cpl))
         debug && println("$v => ", bn)
         if length(bn) >= length(profile) && bn[1:length(profile)] == profile
             fcplx = cpl

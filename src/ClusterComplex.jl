@@ -4,12 +4,12 @@ import ComputationalHomology: complex, group, simplices, persistenthomology, dim
 import Clustering: ClusteringResult, nclusters, assignments, counts
 import Distances
 import MultivariateStats: fit, PCA, mean, projection
-import Statistics: mean, covm
+import Statistics: mean, cov, covm
 import LinearAlgebra: inv, pinv, norm, eigen, isposdef, diagm, diag
+import Distributions: MvNormal, MixtureModel, ContinuousMultivariateDistribution
 
 export clustercomplex,
-       MahalonobisCluster, MahalonobisClusteringResult,
-       nclusters, assignments, counts,
+       ModelClusteringResult, nclusters, assignments, counts,
        clusters
 
 include("types.jl")
@@ -154,7 +154,7 @@ function clustercomplex(data::AbstractMatrix{T}, partition::P, χ::T;
     M, N = size(data)         # number of points
     K = nclusters(partition)  # number of partitions
     D = Array{T}(undef, N, K) # distance matrix from partitions
-    mc = Array{MahalonobisCluster}(undef, K)
+    mc = Array{MvNormal}(undef, K)
 
     # get additional parameters
     params = filter(p->first(p) == :subspacemaxdim, kwargs)
@@ -177,12 +177,12 @@ function clustercomplex(data::AbstractMatrix{T}, partition::P, χ::T;
         # println("C=",C)
         # println("size:",size(pdata))
         # println("pd:", isposdef(C))
-        mc[i] = MahalonobisCluster(μ, C, idxs)
+        mc[i] = MvNormal(μ, C)
         D[:, i] .= dist
     end
 
     cplx, w = witness(D', χ, ν=ν, maxoutdim=min(maxoutdim, K), expansion=expansion)
-    return cplx, w, MahalonobisClusteringResult(mc)
+    return cplx, w, ModelClusteringResult(mc, assign)
 end
 
 end

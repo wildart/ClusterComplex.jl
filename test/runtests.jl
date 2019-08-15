@@ -3,7 +3,7 @@ import Random
 
 @testset "Complex" begin
 
-    Random.seed!(49184624)
+    Random.seed!(49184624);
 
     K = 10
     d = 15.0

@@ -8,8 +8,7 @@ import Statistics: mean, cov, covm
 import LinearAlgebra: inv, pinv, norm, eigen, isposdef, diagm, diag
 import Distributions: MvNormal, MixtureModel, ContinuousMultivariateDistribution
 
-export clustercomplex,
-       ModelClusteringResult, nclusters, assignments, counts
+export clustercomplex, ModelClusteringResult, models
 
 include("types.jl")
 include("datasets.jl")

@@ -10,3 +10,4 @@ Base.show(io::IO, mcr::ModelClusteringResult) = print(io, "Model Clustering: $(n
 assignments(clust::ModelClusteringResult) = clust.assignments
 nclusters(clust::ModelClusteringResult) = length(clust.models)
 counts(clust::ModelClusteringResult) = map(i->count(clust.assignments .== i), 1:nclusters(clust))
+models(clust::ModelClusteringResult) = clust.models

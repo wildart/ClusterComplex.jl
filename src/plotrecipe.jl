@@ -46,8 +46,7 @@ end
     end
 end
 
-@recipe function f(mcr::T, args...; colors=false) where {T<:MahalonobisClusteringResult}
-    χ = length(args) > 0 ? args[1] : 1.0
+@recipe function f(mcr::T, χ::Float64=1.0; colors=false) where {T<:MahalonobisClusteringResult}
     for (i,mc) in enumerate(mcr.clusters)
         @series begin
             label --> "CB$i"

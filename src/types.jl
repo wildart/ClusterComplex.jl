@@ -8,7 +8,7 @@ end
 
 struct MahalonobisClusteringResult <: ClusteringResult
     clusters::Vector{MahalonobisCluster}
-    MahalonobisClusteringResult(mcs::Vector{MahalonobisCluster}) = new(mcs)
+    MahalonobisClusteringResult(mcs::Vector{<:MahalonobisCluster}) = new(mcs)
 end
 Base.show(io::IO, result::MahalonobisClusteringResult) =
     print(io, "MahalonobisClustering: $(length(result.clusters)) clusters")

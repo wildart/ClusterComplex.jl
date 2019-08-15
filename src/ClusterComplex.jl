@@ -9,8 +9,7 @@ import LinearAlgebra: inv, pinv, norm, eigen, isposdef, diagm, diag
 import Distributions: MvNormal, MixtureModel, ContinuousMultivariateDistribution
 
 export clustercomplex,
-       ModelClusteringResult, nclusters, assignments, counts,
-       clusters
+       ModelClusteringResult, nclusters, assignments, counts
 
 include("types.jl")
 include("datasets.jl")

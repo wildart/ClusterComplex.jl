@@ -18,5 +18,9 @@ import Random
     @test nclusters(mcr) == K
     @test assignments(mcr) == assignments(cls)
 
-end
+    XC = CustomClusteringResult(L)
+    @test nclusters(XC) == 2
+    @test counts(XC) == [500, 500]
+    @test assignments(XC) == L
 
+end

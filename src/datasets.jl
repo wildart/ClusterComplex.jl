@@ -34,7 +34,7 @@ end
 # :Name => (File, PROF)
 const DATASETS = Dict(
     "TwoMoons" => ("twomoons.csv", (2, 0)),
-    "TreeMoons" => ("treemoons.csv", (3, 0)),
+    "ThreeMoons" => ("threemoons.csv", (3, 0)),
     "FiveMoons" => ("fivemoons.csv", (5, 0)),
     "Circles"  => ("circles.csv", (2, 2)),
     "OIP15"    => ("optical-k15.csv.gz", (1, 5)),

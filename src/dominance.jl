@@ -96,6 +96,10 @@ function dominance(flt, profile; reduction = StandardReduction)
         end
         @debug "Betti profile @ $fv" β=res
 
+        # missed the start of the interval
+        isinf(R0) && res[1] < profile[1] && break
+
+        # no interval end
         !(isinf(K) || isinf(R1)) && break
     end
     if isinf(K)

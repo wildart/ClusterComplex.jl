@@ -1,6 +1,6 @@
 name = "ClusterComplex"
 uuid = "a4b5195f-7e50-4300-9f38-3baf1bf3ac9e"
-version = "0.3.3"
+version = "0.4.0"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -16,7 +16,8 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 
 [compat]
-MultivariateStats = ">= 0.6.0"
+MultivariateStats = "^0.7.0"
+ComputationalHomology = "^0.6.0"
 julia = "≥ 1.1.0"
 
 [extras]

@@ -1,12 +1,14 @@
 module ClusterComplex
 
-import ComputationalHomology: complex, group, simplices, persistenthomology, dim, witness, StandardReduction
-import Clustering: ClusteringResult, nclusters, assignments, counts
-import Distances
-import MultivariateStats: fit, PCA, mean, projection
-import Statistics: mean, cov, covm
-import LinearAlgebra: inv, pinv, norm, eigen, isposdef, diagm, diag
-import Distributions: MvNormal, MixtureModel, ContinuousMultivariateDistribution
+using ComputationalHomology: complex, group, persistenthomology, dim, witness, StandardReduction, TwistReduction
+using Clustering: ClusteringResult, nclusters, assignments, counts
+using Distances: Distances
+using MultivariateStats: fit, PCA, mean, projection
+using Statistics: mean, cov, covm
+using LinearAlgebra: inv, pinv, norm, eigen, isposdef, diagm, diag
+using Distributions: MvNormal, MixtureModel, ContinuousMultivariateDistribution
+
+import Clustering: nclusters, counts
 
 export clustercomplex, ModelClusteringResult, models, CustomClusteringResult
 
@@ -23,7 +25,7 @@ function invcov(S)
     end
 end
 
-function rescalecov!(C)
+function rescalecov(C)
     F = eigen(C)
     V = F.values
 
@@ -84,8 +86,8 @@ function mahalonobis(data::AbstractMatrix{<:Real}, partition::Vector{Int})
     μ = vec(mean(pdata, dims=2))
     C = covm(pdata, μ, 2)
     if !isposdef(C)
-        error("Covariance matrix is not positive definite")
-        # rescalecov!(C)
+        @warn "Covariance matrix is not positive definite. Try to rescale." C=C
+        C = rescalecov(C)
     end
     dist = Distances.Mahalanobis(invcov(C))
     D = Distances.colwise(dist, data, μ)

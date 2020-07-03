@@ -54,18 +54,19 @@ end
 
 function dominance(flt, profile; reduction = StandardReduction)
     tmpflt = similar(flt)
+    cplx = complex(flt)
 
     pl = length(profile)
 
     K = R0 = R1 = Inf
     res = ntuple(v->0, length(profile))
     final = ntuple(v->v == 1 ? 1 : 0, length(profile))
-    for (fv, splxs) in simplices(flt)
+    for (fv, splxs) in flt
 
         # construct incrementally filtration
         if length(splxs) > 0
             for s in splxs
-                push!(tmpflt, s, fv)
+                push!(tmpflt, cplx[s[2], s[1]], fv)
             end
 
             ph = persistenthomology(reduction, tmpflt)
@@ -73,8 +74,8 @@ function dominance(flt, profile; reduction = StandardReduction)
             # calculate betti profile
             maxdim = min(pl-1, dim(complex(tmpflt)))
             res = zeros(Int, length(profile))
-            for d in 0:maxdim
-                res[d+1] = group(ph,d)
+            for (i,β) in enumerate(betti(ph)[end-1])
+                res[i] = β
             end
             res = tuple(res...)
         end
@@ -131,5 +132,57 @@ function dominance(flt, profile; reduction = StandardReduction)
 
     @debug "Relative dominance" RelD R0 R1 K
 
+    return RelD, R0, R1, K
+end
+
+function dominance2(flt, profile; reduction = TwistReduction)
+    ph = persistenthomology(reduction, flt)
+    pl = length(profile)
+    K = R0 = R1 = Inf
+    final = ntuple(v->v == 1 ? 1 : 0, length(profile))
+    for (fv, βs) in ph
+        if βs[1:end-1] == profile[1:end-1] && βs[end] >= profile[end] && isinf(R0)
+            R0 = fv
+            @debug "Betti profile @ $fv" β=βs β⁰=profile R0
+        end
+        if βs[1:end-1] != profile[1:end-1] && !isinf(R0) && isinf(R1)
+            R1 = fv
+            @debug "Betti profile @ $fv" β=βs β⁰=profile R0 R1
+        end
+        if βs[1:end-1] == final[1:end-1] && βs[end] >= final[end] && !isinf(R0) && !isinf(R1)
+            K = fv
+            @debug "Betti profile @ $fv" β=βs β⁰=profile R0 R1 K
+        end
+        @debug "Betti profile @ $fv" β=βs
+         # no interval end
+         !(isinf(K) || isinf(R1)) && break
+    end
+    if isinf(K)
+        K = maximum(flt)
+    end
+    if isinf(R1)
+        R1 = maximum(flt)
+    end
+    # relative domanance calculation (cases)
+    if K != 0
+        if R1 == R0 == K
+            # found all profiles at the same time (a,b,c) & (1, 0, 0)
+            RelD = 1
+        else
+            # if K < R0 then 1 otherwise proper relative dominance
+            RelD = min(1, (R1-R0)/K)
+        end
+    else
+        # K == 0 then first complex in filtration is already 1 connected component
+        # so if R1-R0 is ∞ (not found in filtration) then no dominance detected
+        RelD = isinf(R1-R0) ? 0 : 1
+    end
+    # RelD = min(1, K == 0.0 ? 1.0 : (R1-R0)/K)
+    RelD = any(isinf, [R0,R1,K]) ? NaN : (R1-R0)/K
+    if all(iszero, [R0,R1,K])
+        RelD = 1.0
+    end
+
+    @debug "Relative dominance" RelD R0 R1 K
     return RelD, R0, R1, K
 end

@@ -1,5 +1,15 @@
-using Base.Threads
-import ComputationalHomology: betti, homology
+using ComputationalHomology: betti, homology, dim
+
+function adjustprofile(profile, flt)
+    pl = length(profile)
+    d = dim(complex(flt))+1
+    # adjust profile
+    if pl < d
+        return tuple([collect(profile); fill(0, d-pl)]...)
+    else
+        return profile[1:d]
+    end
+end
 
 """Caluclate relative dominance
 
@@ -55,7 +65,7 @@ end
 function dominance(flt, profile; reduction = StandardReduction)
     tmpflt = similar(flt)
     cplx = complex(flt)
-
+    profile = adjustprofile(profile, flt)
     pl = length(profile)
 
     K = R0 = R1 = Inf
@@ -137,9 +147,10 @@ end
 
 function dominance2(flt, profile; reduction = TwistReduction)
     ph = persistenthomology(reduction, flt)
+    profile = adjustprofile(profile, flt)
     pl = length(profile)
     K = R0 = R1 = Inf
-    final = ntuple(v->v == 1 ? 1 : 0, length(profile))
+    final = ntuple(v->v == 1 ? 1 : 0, pl)
     for (fv, βs) in ph
         if βs[1:end-1] == profile[1:end-1] && βs[end] >= profile[end] && isinf(R0)
             R0 = fv

@@ -10,7 +10,7 @@ using Distributions: MvNormal, MixtureModel, ContinuousMultivariateDistribution
 
 import Clustering: nclusters, counts
 
-export clustercomplex, ModelClusteringResult, models, CustomClusteringResult
+export clustercomplex, ModelClusteringResult, models, model, CustomClusteringResult
 
 include("types.jl")
 include("datasets.jl")
@@ -80,7 +80,7 @@ Calculate a Mahalonobis distance from `partition` of the dataset `X`.
 - `X::AbstractMatrix`: the dataset matrix
 - `partition::Vector{Int}`: the partition indexes
 """
-function mahalonobis(data::AbstractMatrix{<:Real}, partition::Vector{Int})
+function model(data::AbstractMatrix{<:Real}, partition::Vector{Int})
     pdata = view(data, :, partition)
     # calculate Mahalonobis distance parameters
     μ = vec(mean(pdata, dims=2))
@@ -89,9 +89,28 @@ function mahalonobis(data::AbstractMatrix{<:Real}, partition::Vector{Int})
         @warn "Covariance matrix is not positive definite. Try to rescale." C=C
         C = rescalecov(C)
     end
+    return MvNormal(μ, C)
+end
+
+"""
+    mahalonobis(X, model)
+
+Calculate a Mahalonobis distance of the dataset `X` for the distribution `model`.
+
+# Arguments
+- `X::AbstractMatrix`: the dataset matrix
+- `model::MvNormal`: the distribution model
+"""
+function mahalonobis(data::AbstractMatrix{<:Real}, model::MvNormal)
+    μ = mean(model)
+    C = cov(model)
+    if !isposdef(C)
+        @warn "Covariance matrix is not positive definite. Try to rescale." C=C
+        C = rescalecov(C)
+    end
     dist = Distances.Mahalanobis(invcov(C))
     D = Distances.colwise(dist, data, μ)
-    return μ, C, D
+    return D
 end
 
 """
@@ -153,36 +172,35 @@ function clustercomplex(data::AbstractMatrix{T}, partition::P, χ::T;
 
     M, N = size(data)         # number of points
     K = nclusters(partition)  # number of partitions
-    D = Array{T}(undef, N, K) # distance matrix from partitions
     mc = Array{MvNormal}(undef, K)
 
-    # get additional parameters
-    params = filter(p->first(p) == :subspacemaxdim, kwargs)
-    ssmaxdim = get(params, :subspacemaxdim, size(data,1)-1)
-
-    # calculate distance matrix with appropriate method
+    # construct models
     assign = assignments(partition)
     for i in unique(assign)
-        pdataidxs = assign .== i
-        idxs = (1:N)[pdataidxs]
-        μ, C, dist = if method == :mahalonobis
-            mahalonobis(data, idxs)
-        elseif method == :subspacemahalonobis
-            ssmahalonobis(data, idxs, subspacemaxdim=ssmaxdim)
-        else
-            throw(ArgumentError("Invalid method name $(method)"))
-        end
-        # println("i=",i)
-        # println("μ=",μ)
-        # println("C=",C)
-        # println("size:",size(pdata))
-        # println("pd:", isposdef(C))
-        mc[i] = MvNormal(μ, C)
-        D[:, i] .= dist
+        idxs = findall(assign .== i)
+        mc[i] = model(data, idxs)
+    end
+
+    clustercomplex(data, mc, χ, assignments=assign, maxoutdim=maxoutdim, expansion=expansion)
+end
+
+function clustercomplex(data::AbstractMatrix{T}, models::Vector{DS}, χ::T;
+                        assignments::Vector{Int} = Int[],
+                        maxoutdim::Integer = 1,
+                        expansion = :incremental,
+                        ν::Integer=0) where {T <: Real, DS <: CMDist}
+
+    M, N = size(data)         # number of points
+    K = length(models)        # number of partitions
+    D = Array{T}(undef, N, K) # distance matrix from partitions
+
+    # calculate distance matrix with appropriate method
+    for (i,m) in enumerate(models)
+        D[:, i] .= mahalonobis(data, m)
     end
 
     cplx, w = witness(D', χ, ν=ν, maxoutdim=min(maxoutdim, K), expansion=expansion)
-    return cplx, w, ModelClusteringResult(mc, assign)
+    return cplx, w, ModelClusteringResult(models, assignments)
 end
 
 end

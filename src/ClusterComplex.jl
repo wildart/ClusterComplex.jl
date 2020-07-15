@@ -6,9 +6,9 @@ using Distances: Distances
 using MultivariateStats: fit, PCA, mean, projection
 using Statistics: mean, cov, covm
 using LinearAlgebra: inv, pinv, norm, eigen, isposdef, diagm, diag
-using Distributions: MvNormal, MixtureModel, ContinuousMultivariateDistribution
+using Distributions: MvNormal, MixtureModel, ContinuousMultivariateDistribution, logpdf
 
-import Clustering: nclusters, counts
+import Clustering: nclusters, counts, assignments
 
 export clustercomplex, ModelClusteringResult, models, model, CustomClusteringResult
 
@@ -16,6 +16,11 @@ include("types.jl")
 include("datasets.jl")
 include("dominance.jl")
 include("plotrecipe.jl")
+
+function assignments(data::AbstractMatrix{T}, models::Vector{DS}) where {T <: Real, DS <: CMDist}
+    lpp = hcat([logpdf(m, data) for m in models]...)
+    return [findmax(r)[2] for r in eachrow(lpp)]
+end
 
 function invcov(S)
     return try

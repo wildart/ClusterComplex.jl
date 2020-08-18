@@ -5,8 +5,9 @@ using Clustering: ClusteringResult, nclusters, assignments, counts
 using Distances: Distances
 using MultivariateStats: fit, PCA, mean, projection
 using Statistics: mean, cov, covm
-using LinearAlgebra: inv, pinv, norm, eigen, isposdef, diagm, diag
-using Distributions: MvNormal, MixtureModel, ContinuousMultivariateDistribution, logpdf
+using LinearAlgebra: inv, pinv, norm, eigen, isposdef, diagm, diag, Diagonal
+using Distributions: MvNormal, MixtureModel, ContinuousMultivariateDistribution,
+                     logpdf, fit_mle, FullNormal, DiagNormal, sqmahal!
 
 import Clustering: nclusters, counts, assignments
 
@@ -77,9 +78,9 @@ function distance_to_manifold(X::AbstractMatrix{T}, origin::AbstractVector{T}, b
 end
 
 """
-    mahalonobis(X, partition)
+    model(X, partition)
 
-Calculate a Mahalonobis distance from `partition` of the dataset `X`.
+Constract Gaussian model from data using MLE.
 
 # Arguments
 - `X::AbstractMatrix`: the dataset matrix
@@ -87,35 +88,11 @@ Calculate a Mahalonobis distance from `partition` of the dataset `X`.
 """
 function model(data::AbstractMatrix{<:Real}, partition::Vector{Int})
     pdata = view(data, :, partition)
-    # calculate Mahalonobis distance parameters
-    μ = vec(mean(pdata, dims=2))
-    C = covm(pdata, μ, 2)
-    if !isposdef(C)
-        @warn "Covariance matrix is not positive definite. Try to rescale." C=C
-        C = rescalecov(C)
+    return try
+        fit_mle(FullNormal, pdata)
+    catch
+        fit_mle(DiagNormal, pdata)
     end
-    return MvNormal(μ, C)
-end
-
-"""
-    mahalonobis(X, model)
-
-Calculate a Mahalonobis distance of the dataset `X` for the distribution `model`.
-
-# Arguments
-- `X::AbstractMatrix`: the dataset matrix
-- `model::MvNormal`: the distribution model
-"""
-function mahalonobis(data::AbstractMatrix{<:Real}, model::MvNormal)
-    μ = mean(model)
-    C = cov(model)
-    if !isposdef(C)
-        @warn "Covariance matrix is not positive definite. Try to rescale." C=C
-        C = rescalecov(C)
-    end
-    dist = Distances.Mahalanobis(invcov(C))
-    D = Distances.colwise(dist, data, μ)
-    return D
 end
 
 """
@@ -162,14 +139,12 @@ Returns a simplicial complex with weights evaluated from distances.
 - `data::AbstractMatrix`: the dataset matrix.
 - `partition::ClusteringResult`: the partition of the dataset.
 - `χ::Real`: the maximal radius of the elliptical sphere.
-- `method::Symbol = :mahalonobis`: the default construction method
 - `maxoutdim::Integer = 1`: the maximal dimension of the simplicial complex
 - `expansion::Symbol = :incremental`: the default simplicial complex construction method
 - `ν::Integer=0`: the witness comples construction mode (see `witness`)
 - `subspacemaxdim::Integer = size(data,1)-1`: the maximal dimension of the partition subspace
 """
 function clustercomplex(data::AbstractMatrix{T}, partition::P, χ::T;
-                        method=:mahalonobis,
                         maxoutdim::Integer = 1,
                         expansion = :incremental,
                         ν::Integer=0,
@@ -201,7 +176,9 @@ function clustercomplex(data::AbstractMatrix{T}, models::Vector{DS}, χ::T;
 
     # calculate distance matrix with appropriate method
     for (i,m) in enumerate(models)
-        D[:, i] .= mahalonobis(data, m)
+        Dᵢ = @view D[:, i]
+        sqmahal!(Dᵢ, m, data)
+        Dᵢ .= sqrt.(Dᵢ)
     end
 
     cplx, w = witness(D', χ, ν=ν, maxoutdim=min(maxoutdim, K), expansion=expansion)
